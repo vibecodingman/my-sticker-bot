@@ -9,7 +9,6 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.storage.memory import MemoryStorage
 from PIL import Image
 
-# Читаем токены из безопасных настроек Render
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 BOT_USERNAME = os.environ.get("BOT_USERNAME")
 
@@ -19,6 +18,7 @@ dp = Dispatcher(storage=MemoryStorage())
 class PackCreation(StatesGroup):
     choosing_name = State()
 
+# Память для хранения картинок пользователей
 user_photos = {}
 
 main_kb = ReplyKeyboardMarkup(
@@ -80,11 +80,16 @@ async def collect_images(message: Message):
 async def request_pack_name(message: Message, state: FSMContext):
     user_id = message.from_user.id
     photos = user_photos.get(user_id, [])
+    
     if not photos:
         await message.answer("⚠️ Сначала отправьте мне хотя бы одну фотографию!")
         return
+        
     await state.set_state(PackCreation.choosing_name)
-    await message.answer("📝 Введите желаемое название для стикерпака:", reply_markup=ReplyKeyboardRemove())
+    await message.answer(
+        "📝 Введите желаемое отображаемое название для вашего стикерпака:",
+        reply_markup=ReplyKeyboardRemove()
+    )
 
 @dp.message(PackCreation.choosing_name)
 async def process_pack_name(message: Message, state: FSMContext):
@@ -97,15 +102,25 @@ async def process_pack_name(message: Message, state: FSMContext):
     
     try:
         input_stickers = []
+        
         for i, img_bytes in enumerate(photos):
             sticker_file = BufferedInputFile(img_bytes, filename=f"sticker_{i}.png")
             uploaded_file = await bot.upload_sticker_file(user_id=user_id, sticker=sticker_file, sticker_format="static")
             input_stickers.append(InputSticker(sticker=uploaded_file.file_id, format="static", emoji_list=["✨"]))
         
-        await bot.create_new_sticker_set(user_id=user_id, name=pack_name, title=pack_title, stickers=input_stickers, sticker_format="static")
+        await bot.create_new_sticker_set(
+            user_id=user_id,
+            name=pack_name,
+            title=pack_title,
+            stickers=input_stickers,
+            sticker_format="static"
+        )
+        
         user_photos[user_id] = []
         await state.clear()
+        
         await message.answer(f"🎉 Стикерпак «{pack_title}» успешно создан!\n🔗 Ссылка: t.me/addstickers/{pack_name}", reply_markup=main_kb)
+        
     except Exception as e:
         await message.answer(f"❌ Ошибка создания пака: {e}\nПопробуйте написать другое название.", reply_markup=main_kb)
         await state.clear()
