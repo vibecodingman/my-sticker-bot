@@ -30,6 +30,7 @@ def resize_image_for_sticker(image_bytes: bytes) -> bytes:
     img = Image.open(io.BytesIO(image_bytes))
     if img.mode != "RGBA":
         img = img.convert("RGBA")
+    
     width, height = img.size
     if width > height:
         new_width = 512
@@ -37,12 +38,17 @@ def resize_image_for_sticker(image_bytes: bytes) -> bytes:
     else:
         new_height = 512
         new_width = int(width * (512 / height))
+        
     new_width = max(1, new_width)
     new_height = max(1, new_height)
+    
     img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+    
     output = io.BytesIO()
-    img.save(output, format="PNG", optimize=True)
+    # Сохраняем в WEBP с качеством 90% — вес уменьшится до 30-50 КБ
+    img.save(output, format="WEBP", quality=90)
     return output.getvalue()
+
 
 @dp.message(Command("start"))
 async def cmd_start(message: Message, state: FSMContext):
