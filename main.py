@@ -49,7 +49,6 @@ def resize_image_for_sticker(image_bytes: bytes) -> bytes:
     img.save(output, format="WEBP", quality=90)
     return output.getvalue()
 
-
 @dp.message(Command("start"))
 async def cmd_start(message: Message, state: FSMContext):
     await state.clear()
