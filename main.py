@@ -54,8 +54,9 @@ async def cmd_start(message: Message, state: FSMContext):
     await state.clear()
     user_photos[message.from_user.id] = []
     await message.answer(
-        "👋 Привет! Отправь мне несколько фотографий (сжатых или файлом).\n"
-        "Когда закончишь, нажми на кнопку **«Готово, создать стикерпак»**, чтобы выбрать название!",
+        "👋 Привет! Отправь мне те фотографии (сжатые или файлом), из которых хочешь получить стикеры.\n"
+        "Когда закончишь, нажми на кнопку «Готово, создать стикерпак», чтобы выбрать название!\n"
+        "Если возникнут какие-то проблемы, то пиши сюда 👉 @CryGarant",
         reply_markup=main_kb
     )
 
@@ -90,7 +91,7 @@ async def process_pack_name(message: Message, state: FSMContext):
     user_id = message.from_user.id
     photos = user_photos.get(user_id, [])
     pack_title = f"{message.text} by @{BOT_USERNAME}" 
-    await message.answer("⏳ Начинаю создание вашего стикерпака на сервере бота...")
+    await message.answer("⏳ Начинаю создание вашего стикерпака, проявите терпение... ")
     pack_name = f"pack_{user_id}_{int(asyncio.get_event_loop().time())}_by_{BOT_USERNAME}"
     try:
         input_stickers = []
