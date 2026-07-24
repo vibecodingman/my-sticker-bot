@@ -28,8 +28,9 @@ main_kb = ReplyKeyboardMarkup(
 
 def resize_image_for_sticker(image_bytes: bytes) -> bytes:
     img = Image.open(io.BytesIO(image_bytes))
-    if img.mode != "RGBA":
-        img = img.convert("RGBA")
+    
+    # Всегда конвертируем в RGBA для гарантированной поддержки прозрачности
+    img = img.convert("RGBA")
     
     width, height = img.size
     if width > height:
@@ -45,10 +46,10 @@ def resize_image_for_sticker(image_bytes: bytes) -> bytes:
     img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
     
     output = io.BytesIO()
-    # Сохраняем в WEBP с качеством 90% — вес уменьшится до 30-50 КБ
-    img.save(output, format="WEBP", quality=90)
+    # Добавляем параметр save_all=True, чтобы сохранить слои прозрачности WEBP
+    img.save(output, format="WEBP", quality=90, save_all=True)
     return output.getvalue()
-
+    
 @dp.message(Command("start"))
 async def cmd_start(message: Message, state: FSMContext):
     await state.clear()
